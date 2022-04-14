@@ -226,6 +226,17 @@ public class subscribeToPewdiepieScript : MonoBehaviour {
         DebugMsg("That was right!");
     }
 
+    private int[] GetAnswerFromNum(int num)
+    {
+        var arr = new int[5];
+        arr[0] = num / 10000;
+        arr[1] = num / 1000 % 10;
+        arr[2] = num / 100 % 10;
+        arr[3] = num / 10 % 10;
+        arr[4] = num % 10;
+        return arr;
+    }
+
     public string TwitchHelpMessage = "Use !{0} submit 12345 to submit 12345. (Replace 12345 with your answer.)";
     IEnumerator ProcessTwitchCommand(string cmd)
     {
@@ -246,5 +257,33 @@ public class subscribeToPewdiepieScript : MonoBehaviour {
 
         else
             yield break;
+    }
+
+    private IEnumerator TwitchHandleForcedSolve()
+    {
+        int num;
+        if (tseriesSubs >= pewdiepieSubs)
+            num = 0;
+        else
+            num = (pewdiepieSubs - tseriesSubs) % 100000;
+        var answer = GetAnswerFromNum(num);
+        for (int i = 0; i < 5; i++)
+        {
+            var target = answer[i];
+            while (numbers[i] != answer[i])
+            {
+                var distance = (Math.Abs(numbers[i] - target) + 5) % 10 - 5;
+                if (numbers[i] > target)
+                    distance *= -1;
+                if (distance > 0)
+                    topRowSelectables[i].OnInteract();
+                else
+                    bottomRowSelectables[i].OnInteract();
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+        submitSelectable.OnInteract();
+        while (!solved)
+            yield return true;
     }
 }
